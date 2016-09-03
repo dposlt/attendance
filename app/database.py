@@ -1,0 +1,220 @@
+# -*- coding: utf-8 -*-
+
+import sqlite3,os, datetime
+
+
+class Conn:
+    def __init__(self,dbname):
+        self.dbname = dbname
+        #zde nastala inicializace objektu
+        
+    def tryConn(self):
+        try:
+            os.path.exists(self.dbname)
+            db = sqlite3.connect(self.dbname)
+            cursor = db.cursor()
+            return cursor
+        except IOError:
+            return "Chyba souboru: ", sys.exc_info()[0]
+        
+    
+class openDatabase:
+    def conn(self):
+            self.dbname = 'dochazka.db'
+            overeni = os.path.exists(self.dbname)
+            if overeni == False:
+                return False
+            db = sqlite3.connect(self.dbname)
+            cursor = db.cursor()
+            return (cursor,db)
+        
+    
+    def createDb(self,dbname):
+        self.dbname = dbname
+        db = sqlite3.connect(self.dbname)
+        
+        overeni = os.path.exists(self.dbname)
+        if overeni:
+            cursor = db.cursor()
+            cursor.execute("DROP TABLE IF EXISTS uzivatele")
+            cursor.execute("DROP TABLE IF EXISTS time")
+            cursor.execute("DROP TABLE IF EXISTS stav")
+            cursor.execute("CREATE table uzivatele ("
+                           "id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,"
+                           "name TEXT UNIQUE NOT NULL)")
+            
+            cursor.execute("CREATE table time("
+                           "id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,"
+                           "uzivatel TEXT NOT NULL,"
+                           "prichod DATETIME,"
+                           "odchod DATETIME,"
+                           "odpracovano DATETIME)")
+            
+            cursor.execute("CREATE table stav("
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,"
+                            "uzivatel TEXT NOT NULL,"
+                            "cas DATETIME NOT NULL,"
+                            "stav TEXT NOT NULL)")   
+
+	    cursor.execute("CREATE table md5 (heslo)")
+	    
+            db.commit()
+            cursor.close()
+            db.close()
+        return db
+                           
+    def createUser(self,name):
+        self.name = name
+        (cursor,db) = openDatabase().conn()
+        if len(name) !=0:
+            cursor.execute("SELECT id FROM uzivatele WHERE name =:name",dict(name=self.name))
+            userExists = cursor.fetchone()
+            if userExists:
+                return False
+            
+            cursor.execute("INSERT INTO uzivatele "
+                           "(name)"
+                           "VALUES (?)",
+                           (self.name,))
+            db.commit()
+        return db
+    
+    def selectUser(self):
+        (cursor,db) = openDatabase().conn()
+        cursor.execute('SELECT name FROM uzivatele ORDER BY name ASC')
+        row = cursor.fetchall()
+        if row:
+            return row
+
+    def selectPristupy(self):
+        (cursor,db) = openDatabase().conn()
+        cursor.execute('SELECT * FROM stav ORDER BY id DESC')
+        row = cursor.fetchall()
+        if row:
+            return row
+        
+        
+        
+    def selectFilter(self,prikaz,where,*stav):
+        self.prikaz = prikaz
+        self.where = where
+        
+        (cursor,db) = openDatabase().conn()
+        
+        if stav:
+            self.stav = stav    
+            cursor.execute(self.prikaz,self.where,self.stav)
+
+        
+        cursor.execute(self.prikaz,self.where)
+        
+        row = cursor.fetchall()
+        if row:
+            return row
+        
+    
+    def updateTime(self,od,do,idPozadavku):
+        self.od = od
+        self.do = do
+        self.idPozadavku = idPozadavku
+        (cursor,db) = openDatabase().conn()
+        row = cursor.execute('UPDATE time SET prichod=:prichod, odchod=:odchod WHERE ID=:id', dict(prichod=self.od,odchod=self.do,id=self.idPozadavku))
+        if row:
+            db.commit()
+        return row
+        
+    def delUser(self,name):
+        self.name = name
+        (cursor,db) = openDatabase().conn()
+        row = cursor.execute('DELETE FROM uzivatele WHERE name =:name',dict(name=self.name,))
+        if row:
+            db.commit()
+        return row    
+     
+    def insertLeave(self, user, time, date):
+        self.user = user
+        self.time = time
+        self.date = date
+        
+        (cursor,db) = openDatabase().conn()
+        
+        #zjistime id prichodu kde jeste neodesel
+        row = openDatabase().checkArriveOrLeave(self.user)
+        if row != False:
+            cursor.execute("UPDATE time set odchod=:odchod WHERE id=:id",
+                            dict(odchod=self.time,id=row[0]))
+            cursor.execute("INSERT INTO stav"
+                           "(uzivatel,cas,stav)"
+                           "VALUES (:user,:cas,:stav)",
+                           dict(user=self.user,cas=self.time,stav='odchod'))  
+            db.commit()
+            hodiny = openDatabase().pocetH(row[0])
+            cursor.execute("UPDATE time set odpracovano=:hodiny WHERE id=:id", dict(hodiny = hodiny, id=row[0]))
+            db.commit()
+            return True
+        else:
+            return False
+            
+    
+    def pocetH(self,id):
+        self.id = id
+        (cursor,db) = openDatabase().conn()
+        cursor.execute("select prichod, odchod from time where id=:id",dict(id=self.id))
+        row = cursor.fetchone()
+        prichod = row[0]
+        odchod = row[1]
+        
+        start = prichod[11:19]
+        end = odchod[11:19]
+        start_dt = datetime.datetime.strptime(start, '%H:%M:%S')
+        end_dt = datetime.datetime.strptime(end, '%H:%M:%S')
+        diff = (end_dt - start_dt)
+        result = str(datetime.timedelta(seconds=diff.seconds/60))
+        
+        return result[2:]
+    
+    def celkem(self,hodiny):
+        self.hodiny = hodiny
+        hodin = 0
+        minut = 0
+        if hodiny:
+            for i in hodiny:
+                if i[3] !=None:
+                    hodin +=int(i[3][:2])
+                    minut +=int(i[3][3:])
+                    if minut > 60:
+                        minut = minut - 60
+                        hodin = hodin+1
+            result = str(hodin)+":"+str(minut)
+            return result
+        else:
+            return False
+    
+    
+    def insertArrive(self,user,prichod,stav):
+        self.user = user
+        self.prichod = prichod
+        self.stav = stav
+        
+        (cursor,db) = openDatabase().conn()
+        cursor.execute("INSERT INTO time"
+                       "(uzivatel,prichod)"
+                       "VALUES(:user,:prichod)", 
+                       dict(user=self.user,prichod=self.prichod))
+        cursor.execute("INSERT INTO stav"
+                       "(uzivatel,cas,stav)"
+                       "VALUES (:user,:cas,:stav)",
+                       dict(user=self.user,cas=self.prichod,stav=self.stav)
+                       )
+        db.commit()
+
+    def checkArriveOrLeave(self,user):
+        self.user = user
+        
+        (cursor,db) = openDatabase().conn()
+        cursor.execute("SELECT id FROM time WHERE uzivatel=:user AND odchod is null", dict(user=self.user))
+        row = cursor.fetchone()
+        if row:
+            return row
+        else:
+            return False

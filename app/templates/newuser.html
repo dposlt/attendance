@@ -1,0 +1,11 @@
+{% extends "admin.html" %}
+{% block content %}
+<div class="user">
+ <div id="create">{{create}}</div>
+ <form action="/newuser" method="POST">
+  <span>Celé jméno uživatele: </span><br>
+  <input type="text" name="name"><br>
+  <input type="submit" value="Založit">
+ </form>
+</div>
+{% endblock %}

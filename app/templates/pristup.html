@@ -1,0 +1,14 @@
+{% extends "admin.html" %}
+{% block content %}
+{% if row %}
+ <textarea readonly>
+ {% for i in row %}
+  {{i[1]}} || {{i[2]}} || {{i[3]}}
+ {% endfor %}
+ </textarea>
+{% else %}
+ <textarea readonly>
+ žádná data
+ </textarea>
+{% endif %}
+{% endblock %}

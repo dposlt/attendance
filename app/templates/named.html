@@ -1,0 +1,31 @@
+{% extends "admin.html" %}
+{% block content %}
+<div class="jmeno">
+<h1>{{jmeno}}</h1>
+</div>
+<form action="/named" method="POST" onLoad="setTimeout(location.href='http://www.newpage.com', '2000')">
+<div class="tlacitka">
+ <input type="submit" name="submit" class="btn-style" value="příchod" />
+ <input type="submit" name="submit" class="btn-style" value="odchod" />
+ <br>
+ <p id="{{css_time}}">{{time}}</p>
+ {% if odpocet %}
+ <div>Návrat na hlavní stránku za <span id="{{wait}}">5</span> sekund...</div>
+ {% endif %}
+</div>
+</form>
+
+<script type="text/javascript">
+function countDown(){
+ var count = document.getElementById('countdown').innerHTML-1;
+ document.getElementById('countdown').innerHTML = count;
+ if (count<=0) {
+  location.href = "/";
+ }
+ else {
+  t=setTimeout("countDown()",1000);
+ }
+}
+countDown();
+</script>
+{% endblock %}

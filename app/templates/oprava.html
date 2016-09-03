@@ -1,0 +1,38 @@
+{% extends "admin.html" %}
+
+{% block content %}
+<div class="filter">
+<span>Vyberte jméno uživatele a datum, kde potřebujete změnit příchod/odchod</span>
+<br>
+{% if row %}
+  <form action="/oprava" method="POST">
+  <select name="jmeno">
+   {% for i in row %}
+   <option>{{i[0]}}</option>
+   {% endfor %}
+   </select>
+   <input type="text" id="from" name="date" value='{{od}}' class="{{oznaceni}}">
+   <input type="submit" name="send" value="opravit">
+  
+  {% if zaznamy %}
+   <table id="select">
+   {% if update %}
+   <tr><th>  
+   <div>{{upd}}</div>
+   </th></tr>
+   {% endif %}
+   {% for col in zaznamy %}
+   <tr>
+   <td><input type="text" name="prichod" value="{{col[1]}}"></td>
+   <td><input type="text" name="odchod" value="{{col[2]}}"></td>
+   </tr>
+   {% endfor %}
+  
+   <tr><td><input type="password" name="heslo" placeholder="heslo" class="{{error}}"></td><td><input type="submit" name="opravit" value="oprava"></td></tr>
+   
+   </table>
+  {% endif %}
+  </form>
+{% endif %}
+</div>
+{% endblock %}

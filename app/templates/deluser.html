@@ -1,0 +1,18 @@
+{% extends "admin.html" %}
+{% block content %}
+<div class="user">
+ <div id="create">{{create}}</div>
+ <form action="/deluser" method="POST">
+ {% if row %}
+  <span>Vyberte jméno uživatele: </span><br>
+  <select name="jmeno">
+   {% for i in row %}
+   <option>{{i[0]}}</option>
+   {% endfor %}
+  <input type="submit" value="Smazat">
+ {% else %}
+  <span>Žádný uživatel ke smazání</span>
+ {% endif %}
+ </form>
+</div>
+{% endblock %}

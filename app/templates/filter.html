@@ -1,0 +1,45 @@
+{% extends "admin.html" %}
+{% block content %}
+<div class="filter">
+ <form action="/filter" method="POST">
+ {% if row %}
+  <select name="jmeno">
+   {% for i in row %}
+   <option>{{i[0]}}</option>
+   {% endfor %}
+   </select>
+   <label for="from">Od</label>
+   <input type="text" id="from" name="from" value='{{od}}'>
+   <label for="to">Do</label>
+   <input type="text" id="to" name="to" value="{{do}}">
+   <input type="submit" name="submit" value="Filtrovat">
+   <br>
+   
+   {% if more %}
+   <table id="select">
+   
+   <th>Jmeno</th><th>Příchod</th><th>Odchod</th><th>Odpracováno</th>
+   
+    {% for i in more %}
+    <tr>
+     {% for col in i %}
+      <td>{{col}}</td>
+     {% endfor %}
+     </tr>
+     
+    {% endfor %}
+    <tr><td></td><td></td><td id="celkem">Celkem:</td><td id="celkem">{{celkem}}</td></tr>
+    {% if od %}
+    <tr><td></td><td></td><td></td><td><input type="submit" name="submit" value="Exportovat" class="export"></td></tr>
+    {% endif %}
+    </table>
+   
+   {% endif %}
+   
+ {% else %}
+  <span>V databázy se nenechází žádný uživatel</span>
+ {% endif %}
+
+ </form>
+ </div>
+{% endblock %}

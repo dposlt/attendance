@@ -1,0 +1,18 @@
+{% extends "admin.html" %}
+{% block content %}
+<a href="/admin" style="text-decoration:none;">...</a>
+ {% if db == False %}
+  <div class=db>
+  <p>Databaze je porušená nebo neexistuje</p>
+  </div>
+ {% endif %}
+ {% if row %}
+  {% for i in row %}
+   <a href="named?name={{i[0]}}">
+   <div class="uzivatele">
+    <p>{{i[0]}}</p>
+   </div>
+   </a>
+  {% endfor %}
+ {% endif %}
+{% endblock %}

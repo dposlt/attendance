@@ -1,0 +1,64 @@
+<html>
+<head>
+ <title>Docházka U Žíznivého jelena</title>
+ <link href="{{url_for('static', filename='style.css') }}" rel="stylesheet" media="screen">
+ {% if filter %}
+  <link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.css') }}">
+  <script src="{{url_for('static', filename='jquery-1.10.2.js') }}"> </script>
+  <script src="{{url_for('static', filename='jquery-ui.js') }}"> </script>
+  
+  <script>
+  $(function() {
+    $( "#from" ).datepicker({
+      defaultDate: "+1",
+      changeMonth: true,
+      numberOfMonths: 1,
+      dateFormat: "yy-mm-dd",
+      onClose: function( selectedDate ) {
+        $( "#to" ).datepicker( "option", "minDate", selectedDate);
+      }
+    });
+    $( "#to" ).datepicker({
+      defaultDate: "+1",
+      changeMonth: true,
+      numberOfMonths: 1,
+      dateFormat: "yy-mm-dd",
+      onClose: function( selectedDate ) {
+        $( "#from" ).datepicker( "option", "maxDate", selectedDate );
+      }
+    });
+  });
+  </script>
+ {% endif %}
+</head>
+<body>
+ <div id="head">
+ <h2><a href="/" id="logo">Docházka - U Žíznivého jelena</a></h2>
+ </div>
+ {% if root %}
+ <div class="menu">
+ <ul>
+ <li>
+ [<a href="/newuser">založení uživatele</a>]
+ </li>
+ <li>
+ [<a href="/deluser">odstranění uživatele</a>]
+ </li>
+ <li>
+ [<a href="/database">obnovení databáze</a>]
+ </li>
+ <li>
+ [<a href="/prehled">přehledy</a>]
+ </li>
+ <li>
+ [<a href="/filter">filter</a>]
+ </li>
+  <li>
+ [<a href="/oprava">oprava docházky</a>]
+ </li>
+ </ul>
+ </div>
+ {% endif %}
+ {% block content %}{% endblock %}
+</body>
+</html>

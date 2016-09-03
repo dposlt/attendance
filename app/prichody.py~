@@ -1,0 +1,44 @@
+# -*- coding: utf-8 -*-
+
+''' prichod a odchodu
+    datum: 22.7.2014
+    verze: 1.0.
+'''
+
+class Dochazka:
+	import conn
+	pripojDb = conn.Conn('dochazka.db')
+	(conn,db) = pripojDb.tryConn()
+	
+	def prichod(self,user,prichod,stav):
+		self.user = user
+		self.prichod = prichod
+		self.stav = stav
+
+		self.conn.execute("INSERT INTO time"
+                       	     "(uzivatel,prichod)"
+                       	     "VALUES(:user,:prichod)", 
+                       	     dict(user=self.user,prichod=self.prichod))
+
+		self.conn.execute("INSERT INTO stav"
+                       "(uzivatel,cas,stav)"
+                       "VALUES (:user,:cas,:stav)",
+                       dict(user=self.user,cas=self.prichod,stav=self.stav)
+                       )
+		self.db.commit()
+	
+	def overOdchod(self):
+		self.conn.execute("SELECT id FROM time WHERE prichod=:prichod AND uzivatel=:user", dict(prichod = self.prichod, user = self.user))
+		row = self.conn.fetchone()
+		lastId = row[0]
+		beforeID = int(lastId) - 1
+		self.conn.execute("SELECT odchod FROM time WHERE id=:beforeId", dict(beforeID = beforeID))
+		col = self.conn.fetchone()
+		if col
+			return col[0]
+		else:
+			return False
+	
+
+
+
